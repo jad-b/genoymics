@@ -1,0 +1,29 @@
+README.jdb
+Spring 2013
+MPI system for two-pass parallel uClust OTU picking.
+
+1) Cluster sequences at 90% 
+2) Split sequences into n files, using the 90% OTU table as a registrmy, where n is the number of processors to be created
+3) Run uClust in parallel on each sub-file, using MPI.
+4) Consolidate OTU tables into one OTU table.
+
+The scripts which do this:
+
+	master_hiClust.py
+	|
+  1)|--uClust
+  2)|--divvy.py
+  3)|--enterMPY.py
+     a)|--mPyClust.py
+     	i)|--pick_otus.py (or whatever clustering method...)
+  4)|--consolidate.py
+
+
+*master_hiClust.py coordinates the actions, and is responsible for calling each step. This is to provide easy high-level abstraction as well as hopefully make each piece modular.
+*uClust is the program of choice for clustering here. It is written into the source code, but can be changed easy enough.
+*divvy.py handles the division of sequences for the proceeding uCLust run at 97% similarity. The number of OTUs/sequences given to each process should be roughly equivalent, but will not be to avoid splitting OTUs across processes.
+*enterMPY.py is the entry point for running our clustering 
+with MPI. As mpiexec starts each program with the same parameters, we have to wrap the call to the clustering program
+with a python script that assigns sequence files.
+*mPyClust.py is the top-level script for running uclust using MPI. See the comments in mPyClust.py for more information.
+*consolidate.py simply concatenates the 97% OTU tables back together, adjusting OTU numbering as needed.
