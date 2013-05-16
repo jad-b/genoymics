@@ -9,14 +9,14 @@ MPI system for two-pass parallel uClust OTU picking.
 
 The scripts which do this:
 
-	master_hiClust.py
-	|
-  1)|--uClust
-  2)|--divvy.py
-  3)|--enterMPY.py
-     a)|--mPyClust.py
-     	i)|--pick_otus.py (or whatever clustering method...)
-  4)|--consolidate.py
+    0)master_hiClust.py
+        |
+  	  1)|--uClust
+  	  2)|--divvy.py
+  	  3)|--enterMPY.py
+     	|	a)|--mPyClust.py
+     	|		i)|--pick_otus.py (or whatever clustering method...)
+  	  4)|--consolidate.py
 
 
 *master_hiClust.py coordinates the actions, and is responsible for calling each step. This is to provide easy high-level abstraction as well as hopefully make each piece modular.
@@ -27,3 +27,39 @@ with MPI. As mpiexec starts each program with the same parameters, we have to wr
 with a python script that assigns sequence files.
 *mPyClust.py is the top-level script for running uclust using MPI. See the comments in mPyClust.py for more information.
 *consolidate.py simply concatenates the 97% OTU tables back together, adjusting OTU numbering as needed.
+
+
+The final file strucutue looks like this, for an operation with a 75/97 clustering on 24578 sequences in a file called "454_10mb.fna"
+
+	1) output/
+		2) |---hc_75_97_24578/				
+			3) |---hc_454_10mb_otus.txt	
+			4) |---75_uclust_otus/			
+			5) |---divvy/					
+			6) |---hc_97/					
+				7) |---hc_97_0_122_otus/		
+				8) |---hc_97_123_234_otus/				 
+				9) |---hc_97_235_327_otus/				 
+				10)|---hc_97_328-392_otus/				 
+
+1) Top-level output folder
+2) Unique on %/% and # of seqs 
+3) Final otu map
+4) First clustering otus
+5) Divvied sequences
+6) Second clustering otus
+7-10) Sub-folders containing the otus from the final clustering on the divvied sequences
+
+
+Testing
+=======
+Note: You will need to be in the 'src/' directory to run this!
+Once pulled from GitHub, this command should run everything:
+
+python master_hiClust.py ../test_files/454_10mb.fna 4
+
+...which says to cluster the sequences in 454_10mb.fna at default similarities of 75% followed by 97%, and to attempt to use 4 processes of uclust in the second pass. More specific instructions can be provided as well:
+
+python master_hiClust.py <sequence file> <num of procs> -o <output dir> -1 <first pass sim> -2 <second pass sim>
+
+You may also find the '--keep' command to be useful for understanding. It tells HiClust to not delete its intermediate files automatically at the end.
