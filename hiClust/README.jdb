@@ -9,24 +9,24 @@ MPI system for two-pass parallel uClust OTU picking.
 
 The scripts which do this:
 
-    0)master_hiClust.py
+    0)hiClust.py
         |
-  	  1)|--uClust
-  	  2)|--divvy.py
-  	  3)|--enterMPY.py
-     	|	a)|--mPyClust.py
-     	|		i)|--pick_otus.py (or whatever clustering method...)
-  	  4)|--consolidate.py
+      1)|--uClust
+      2)|--divvy
+      3)|--MPICluster
+        |    a)|--mPyClust.py
+     	|	    i)|--pick_otus.py (or whatever clustering method...)
+      4)|--Consolidate
 
 
 *master_hiClust.py coordinates the actions, and is responsible for calling each step. This is to provide easy high-level abstraction as well as hopefully make each piece modular.
 *uClust is the program of choice for clustering here. It is written into the source code, but can be changed easy enough.
-*divvy.py handles the division of sequences for the proceeding uCLust run at 97% similarity. The number of OTUs/sequences given to each process should be roughly equivalent, but will not be to avoid splitting OTUs across processes.
-*enterMPY.py is the entry point for running our clustering 
+*Divvy handles the division of sequences for the proceeding uCLust run at 97% similarity. The number of OTUs/sequences given to each process should be roughly equivalent, but will not be to avoid splitting OTUs across processes.
+*MPICluster is the entry point for running our clustering 
 with MPI. As mpiexec starts each program with the same parameters, we have to wrap the call to the clustering program
 with a python script that assigns sequence files.
 *mPyClust.py is the top-level script for running uclust using MPI. See the comments in mPyClust.py for more information.
-*consolidate.py simply concatenates the 97% OTU tables back together, adjusting OTU numbering as needed.
+*Consolidate simply concatenates the 97% OTU tables back together, adjusting OTU numbering as needed.
 
 
 The final file strucutue looks like this, for an operation with a 75/97 clustering on 24578 sequences in a file called "454_10mb.fna"
@@ -56,10 +56,13 @@ Testing
 Note: You will need to be in the 'src/' directory to run this!
 Once pulled from GitHub, this command should run everything:
 
-python master_hiClust.py ../test_files/454_10mb.fna 4
+python hiClust.py ../test_files/454_10mb.fna 4
 
-...which says to cluster the sequences in 454_10mb.fna at default similarities of 75% followed by 97%, and to attempt to use 4 processes of uclust in the second pass. More specific instructions can be provided as well:
+...which says to cluster the sequences in 454_10mb.fna at default similarities of 75% followed by 97%, 
+and to attempt to use 4 processes of uclust in the second pass. 
 
-python master_hiClust.py <sequence file> <num of procs> -o <output dir> -1 <first pass sim> -2 <second pass sim>
+More specific instructions can be provided as well:
+
+python hiClust.py <sequence file> <num of procs> -o <output dir> -1 <first pass sim> -2 <second pass sim>
 
 You may also find the '--keep' command to be useful for understanding. It tells HiClust to not delete its intermediate files automatically at the end.
